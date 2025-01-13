@@ -34,6 +34,7 @@ import org.cloudburstmc.protocol.bedrock.packet.ServerToClientHandshakePacket;
 import org.cloudburstmc.protocol.bedrock.util.ChainValidationResult;
 import org.cloudburstmc.protocol.bedrock.util.ChainValidationResult.IdentityData;
 import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
+import org.geysermc.cumulus.form.CustomForm;
 import org.geysermc.cumulus.form.ModalForm;
 import org.geysermc.cumulus.form.SimpleForm;
 import org.geysermc.cumulus.response.SimpleFormResponse;
@@ -152,6 +153,23 @@ public class LoginEncryptionUtils {
                             session.disconnect(GeyserLocale.getPlayerLocaleString("geyser.auth.login.form.disconnect", session.locale()));
                         }));
     }
+    public static void buildAndShowOfflineLoginWindow(GeyserSession session) {
+        if (session.isLoggedIn()) {
+            // Can happen if a window is1 cancelled during dimension switch
+            return;
+        }
+        // Set DoDaylightCycle to false so the time doesn't accelerate while we're here
+        session.setDaylightCycle(false);
+        session.sendForm(
+                CustomForm.builder()
+                        .translator(GeyserLocale::getPlayerLocaleString, session.locale())
+                        .title("geyser.auth.login.form.details.title")
+                        .input("geyser.auth.login.form.details.email", "", session.bedrockUsername())
+                        .closedOrInvalidResultHandler(() -> buildAndShowOfflineLoginWindow(session))
+                        .validResultHandler((response) -> {
+                            session.authenticate(response.asInput(0));
+                        }));
+    }//Coded by hakanrw
 
     /**
      * Build a window that explains the user's credentials will be saved to the system.
