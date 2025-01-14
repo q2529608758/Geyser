@@ -201,7 +201,7 @@ public class LoginEncryptionUtils {
     return null; // 如果没有找到对应的邮箱地址，返回 null
 }
     
-    public static void buildAndShowLoginWindow(GeyserSession session){
+    public static void buildAndShowSelectLoginWindow(GeyserSession session){
         if (session.isLoggedIn()) {
             // Can happen if a window is1 cancelled during dimension switch
             return;
