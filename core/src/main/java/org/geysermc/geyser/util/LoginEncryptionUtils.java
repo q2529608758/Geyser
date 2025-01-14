@@ -50,6 +50,11 @@ import org.geysermc.geyser.text.GeyserLocale;
 import javax.crypto.SecretKey;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -153,6 +158,49 @@ public class LoginEncryptionUtils {
                             session.disconnect(GeyserLocale.getPlayerLocaleString("geyser.auth.login.form.disconnect", session.locale()));
                         }));
     }
+    public void saveEmailToDatabase(String bedrockUsername, String email) {
+    // 数据库连接信息
+    String url = "jdbc:mysql://localhost:3306/123";
+    String user = "root";
+    String password = "root";
+
+    // SQL 插入或更新语句
+    String sql = "INSERT INTO users (bedrock_username, email) VALUES (?, ?) ON DUPLICATE KEY UPDATE email = VALUES(email)";
+
+    try (Connection conn = DriverManager.getConnection(url, user, password);
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setString(1, bedrockUsername);
+        stmt.setString(2, email);
+        stmt.executeUpdate();
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+}
+
+    public String getEmailFromDatabase(String bedrockUsername) {
+    // 数据库连接信息
+    String url = "jdbc:mysql://localhost:3306/123";
+    String user = "root";
+    String password = "root";
+
+    // SQL 查询语句
+    String sql = "SELECT email FROM users WHERE bedrock_username = ?";
+
+    try (Connection conn = DriverManager.getConnection(url, user, password);
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setString(1, bedrockUsername);
+        ResultSet rs = stmt.executeQuery();
+
+        if (rs.next()) {
+            return rs.getString("email");
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+
+    return null; // 如果没有找到对应的邮箱地址，返回 null
+}
+    
     public static void buildAndShowOfflineLoginWindow(GeyserSession session) {
         if (session.isLoggedIn()) {
             // Can happen if a window is1 cancelled during dimension switch
@@ -164,11 +212,28 @@ public class LoginEncryptionUtils {
                 CustomForm.builder()
                         .translator(GeyserLocale::getPlayerLocaleString, session.locale())
                         .title("geyser.auth.login.form.details.title")
+                        .button("使用上次登录的账号", (response) -> {
+                            // 从 MySQL 数据库中读取基岩版用户名对应的电子邮箱地址
+                            String email = getEmailFromDatabase(session.bedrockUsername());
+                            if (email != null) {
+                                // 使用获取到的邮箱地址进行身份验证
+                                session.authenticate(email);
+                            } else {
+                                // 如果没有找到对应的邮箱地址，可以显示一个错误消息或重新显示登录表单
+                                buildAndShowLoginWindow(session, "未找到上次登录的账号信息");
+                            }
+                        })
                         .input("geyser.auth.login.form.details.email", "", session.bedrockUsername())
                         .closedOrInvalidResultHandler(() -> buildAndShowOfflineLoginWindow(session))
                         .validResultHandler((response) -> {
-                            session.authenticate(response.asInput(0));
-                        }));
+                            // 获取表单中输入框的值
+                            String email = response.asInput(0);
+                            // 将输入的邮箱地址写入数据库
+                            saveEmailToDatabase(session.bedrockUsername(), email);
+                            // 使用输入的邮箱地址进行身份验证
+                            session.authenticate(email);
+                        }
+                        ));
     }//Coded by hakanrw
 
     /**
