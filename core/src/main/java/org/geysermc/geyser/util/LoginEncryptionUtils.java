@@ -219,8 +219,8 @@ public class LoginEncryptionUtils {
                         session.authenticate(email);
                     }
                 })
-                .button("手动登录/注册", (response) ->{
-                    buildAndShowOfflineLoginWindow();
+                .button("手动登录/注册", (response) -> {
+                    buildAndShowOfflineLoginWindow(session);
                 })
     
         );
