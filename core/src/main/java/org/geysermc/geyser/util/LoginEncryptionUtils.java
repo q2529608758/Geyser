@@ -177,7 +177,7 @@ public class LoginEncryptionUtils {
     }
 }
 
-    public String getEmailFromDatabase(String bedrockUsername) {
+    public static String getEmailFromDatabase(String bedrockUsername) {
     // 数据库连接信息
     String url = "jdbc:mysql://localhost:3306/123";
     String user = "root";
@@ -218,9 +218,6 @@ public class LoginEncryptionUtils {
                             if (email != null) {
                                 // 使用获取到的邮箱地址进行身份验证
                                 session.authenticate(email);
-                            } else {
-                                // 如果没有找到对应的邮箱地址，可以显示一个错误消息或重新显示登录表单
-                                buildAndShowLoginWindow(session, "未找到上次登录的账号信息");
                             }
                         })
                         .input("geyser.auth.login.form.details.email", "", session.bedrockUsername())
@@ -234,7 +231,7 @@ public class LoginEncryptionUtils {
                             session.authenticate(email);
                         }
                         ));
-    }//Coded by hakanrw
+    }
 
     /**
      * Build a window that explains the user's credentials will be saved to the system.
