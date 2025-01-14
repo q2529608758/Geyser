@@ -213,25 +213,21 @@ public static void buildAndShowSelectLoginWindow(GeyserSession session) {
         .button("使用上次登录的账号")
         .button("手动登录/注册")
         .validResultHandler(response -> {
-            int buttonIndex = response.getButtonIndex();
-            switch (buttonIndex) {
-                case 0:
-                    // 从 MySQL 数据库中读取基岩版用户名对应的电子邮箱地址
-                    String email = getEmailFromDatabase(session.bedrockUsername());
-                    if (email != null) {
-                        // 使用获取到的邮箱地址进行身份验证
-                        session.authenticate(email);
-                    } else {
-                        // 如果没有找到邮箱地址，显示错误信息或重新显示登录窗口
-                        buildAndShowSelectLoginWindow(session);
-                    }
-                    break;
-                case 1:
-                    // 显示手动登录/注册窗口
-                    buildAndShowOfflineLoginWindow(session);
-                    break;
+            String buttonClicked = response.getClickedButton().getText();
+            if ("使用上次登录的账号".equals(buttonClicked)) {
+                // Handle button 0
+                String email = getEmailFromDatabase(session.bedrockUsername());
+                if (email != null) {
+                    session.authenticate(email);
+                } else {
+                    buildAndShowSelectLoginWindow(session);
+                }
+            } else if ("手动登录/注册".equals(buttonClicked)) {
+                // Handle button 1
+                buildAndShowOfflineLoginWindow(session);
             }
         })
+        
         .build();
 
     session.sendForm(form);
