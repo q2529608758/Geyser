@@ -37,7 +37,6 @@ import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
 import org.geysermc.cumulus.form.CustomForm;
 import org.geysermc.cumulus.form.ModalForm;
 import org.geysermc.cumulus.form.SimpleForm;
-import org.geysermc.cumulus.component.ButtonComponent;
 import org.geysermc.cumulus.response.SimpleFormResponse;
 import org.geysermc.cumulus.response.result.FormResponseResult;
 import org.geysermc.cumulus.response.result.ValidFormResponseResult;
@@ -202,6 +201,30 @@ public class LoginEncryptionUtils {
     return null; // 如果没有找到对应的邮箱地址，返回 null
 }
     
+    public static void buildAndShowLoginWindow(GeyserSession session){
+        if (session.isLoggedIn()) {
+            // Can happen if a window is1 cancelled during dimension switch
+            return;
+        }
+        session.setDaylightCycle(false);
+        session.sendForm(
+            SimpleForm.builder()
+                .title("Title")
+                .content("Content")
+                .button("使用上次登录的账号", (response) -> {
+                    // 从 MySQL 数据库中读取基岩版用户名对应的电子邮箱地址
+                    String email = getEmailFromDatabase(session.bedrockUsername());
+                    if (email != null) {
+                        // 使用获取到的邮箱地址进行身份验证
+                        session.authenticate(email);
+                    }
+                })
+                .button("手动登录/注册", (response) ->{
+                    buildAndShowOfflineLoginWindow();
+                })
+    
+        );
+    }
     public static void buildAndShowOfflineLoginWindow(GeyserSession session) {
         if (session.isLoggedIn()) {
             // Can happen if a window is1 cancelled during dimension switch
@@ -213,14 +236,6 @@ public class LoginEncryptionUtils {
                 CustomForm.builder()
                         .translator(GeyserLocale::getPlayerLocaleString, session.locale())
                         .title("geyser.auth.login.form.details.title")
-                        .component(ButtonComponent.of("使用上次登录的账号", (response) -> {
-                            // 从 MySQL 数据库中读取基岩版用户名对应的电子邮箱地址
-                            String email = getEmailFromDatabase(session.bedrockUsername());
-                            if (email != null) {
-                                // 使用获取到的邮箱地址进行身份验证
-                                session.authenticate(email);
-                            }
-                        }))
                         .input("geyser.auth.login.form.details.email", "", session.bedrockUsername())
                         .closedOrInvalidResultHandler(() -> buildAndShowOfflineLoginWindow(session))
                         .validResultHandler((response) -> {
