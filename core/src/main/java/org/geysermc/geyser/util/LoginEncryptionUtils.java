@@ -201,30 +201,46 @@ public class LoginEncryptionUtils {
     return null; // 如果没有找到对应的邮箱地址，返回 null
 }
     
-    public static void buildAndShowSelectLoginWindow(GeyserSession session){
-        if (session.isLoggedIn()) {
-            // Can happen if a window is1 cancelled during dimension switch
-            return;
-        }
-        session.setDaylightCycle(false);
-        session.sendForm(
-            SimpleForm.builder()
-                .title("Title")
-                .content("Content")
-                .button("使用上次登录的账号", (response) -> {
-                    // 从 MySQL 数据库中读取基岩版用户名对应的电子邮箱地址
-                    String email = getEmailFromDatabase(session.bedrockUsername());
-                    if (email != null) {
-                        // 使用获取到的邮箱地址进行身份验证
-                        session.authenticate(email);
-                    }
-                })
-                .button("手动登录/注册", (response) -> {
-                    buildAndShowOfflineLoginWindow(session);
-                })
-    
-        );
+public static void buildAndShowSelectLoginWindow(GeyserSession session) {
+    if (session.isLoggedIn()) {
+        // Can happen if a window is cancelled during dimension switch
+        return;
     }
+    session.setDaylightCycle(false);
+    session.sendForm(
+        SimpleForm.builder()
+            .title("Title")
+            .content("Content")
+            .button("使用上次登录的账号")
+            .button("手动登录/注册")
+            .build(),
+        response -> {
+            if (response.isValid()) {
+                int buttonIndex = response.getButtonIndex();
+                switch (buttonIndex) {
+                    case 0:
+                        // 从 MySQL 数据库中读取基岩版用户名对应的电子邮箱地址
+                        String email = getEmailFromDatabase(session.bedrockUsername());
+                        if (email != null) {
+                            // 使用获取到的邮箱地址进行身份验证
+                            session.authenticate(email);
+                        } else {
+                            // 如果没有找到邮箱地址，显示错误信息或重新显示登录窗口
+                            buildAndShowSelectLoginWindow(session);
+                        }
+                        break;
+                    case 1:
+                        // 显示手动登录/注册窗口
+                        buildAndShowOfflineLoginWindow(session);
+                        break;
+                }
+            } else {
+                // 处理无效响应
+                buildAndShowSelectLoginWindow(session);
+            }
+        }
+    );
+}
     public static void buildAndShowOfflineLoginWindow(GeyserSession session) {
         if (session.isLoggedIn()) {
             // Can happen if a window is1 cancelled during dimension switch
