@@ -212,10 +212,7 @@ public static void buildAndShowSelectLoginWindow(GeyserSession session) {
         .content("Content")
         .button("使用上次登录的账号")
         .button("手动登录/注册")
-        .build();
-
-    session.sendForm(form, response -> {
-        if (response.isValid()) {
+        .validResultHandler(response -> {
             int buttonIndex = response.getButtonIndex();
             switch (buttonIndex) {
                 case 0:
@@ -234,11 +231,10 @@ public static void buildAndShowSelectLoginWindow(GeyserSession session) {
                     buildAndShowOfflineLoginWindow(session);
                     break;
             }
-        } else {
-            // 处理无效响应
-            buildAndShowSelectLoginWindow(session);
-        }
-    });
+        })
+        .build();
+
+    session.sendForm(form);
 }
     public static void buildAndShowOfflineLoginWindow(GeyserSession session) {
         if (session.isLoggedIn()) {
