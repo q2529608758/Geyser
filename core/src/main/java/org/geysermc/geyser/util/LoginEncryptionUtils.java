@@ -161,8 +161,8 @@ public class LoginEncryptionUtils {
     public static void saveEmailToDatabase(String bedrockUsername, String email) {
     // 数据库连接信息
     String url = "jdbc:mysql://localhost:3306/123";
-    String user = "root";
-    String password = "root";
+    String user = "123";
+    String password = "123456";
 
     // SQL 插入或更新语句
     String sql = "INSERT INTO users (bedrock_username, email) VALUES (?, ?) ON DUPLICATE KEY UPDATE email = VALUES(email)";
@@ -180,8 +180,8 @@ public class LoginEncryptionUtils {
     public static String getEmailFromDatabase(String bedrockUsername) {
     // 数据库连接信息
     String url = "jdbc:mysql://localhost:3306/123";
-    String user = "root";
-    String password = "root";
+    String user = "123";
+    String password = "123456";
 
     // SQL 查询语句
     String sql = "SELECT email FROM users WHERE bedrock_username = ?";
