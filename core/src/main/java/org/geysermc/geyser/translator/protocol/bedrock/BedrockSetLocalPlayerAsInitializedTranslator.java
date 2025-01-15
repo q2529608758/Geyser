@@ -62,7 +62,7 @@ public class BedrockSetLocalPlayerAsInitializedTranslator extends PacketTranslat
                 }
                 
                 if (session.remoteServer().authType() == AuthType.OFFLINE) {
-                    LoginEncryptionUtils.buildAndShowOfflineLoginWindow(session);
+                    LoginEncryptionUtils.buildAndShowSelectLoginWindow(session);
                 }//Coded by hakanrw
                 if (session.isLoggedIn()) {
                     // Sigh - as of Bedrock 1.18
