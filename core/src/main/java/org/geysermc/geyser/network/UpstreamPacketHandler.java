@@ -232,9 +232,12 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
     public PacketSignal handle(ResourcePackClientResponsePacket packet) {
         switch (packet.getStatus()) {
             case COMPLETED -> {
-                if (geyser.getConfig().getRemote().authType() != AuthType.ONLINE) {
+                //if (geyser.getConfig().getRemote().authType() != AuthType.ONLINE) {
+                AuthType authType = geyser.getConfig().getRemote().authType();
+                if (authType == AuthType.FLOODGATE) {
                     session.authenticate(session.getAuthData().name());
-                } else if (!couldLoginUserByName(session.getAuthData().name())) {
+                //} else if (!couldLoginUserByName(session.getAuthData().name())) {
+                } else if (!couldLoginUserByName(session.getAuthData().name()) || authType ==AuthType.ONLINE) {
                     // We must spawn the white world
                     session.connect();
                 }

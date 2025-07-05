@@ -36,6 +36,7 @@ import org.cloudburstmc.protocol.bedrock.packet.ServerToClientHandshakePacket;
 import org.cloudburstmc.protocol.bedrock.util.ChainValidationResult;
 import org.cloudburstmc.protocol.bedrock.util.ChainValidationResult.IdentityData;
 import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
+import org.geysermc.cumulus.form.CustomForm;
 import org.geysermc.cumulus.form.ModalForm;
 import org.geysermc.cumulus.form.SimpleForm;
 import org.geysermc.cumulus.response.SimpleFormResponse;
@@ -51,6 +52,9 @@ import org.geysermc.geyser.text.GeyserLocale;
 import javax.crypto.SecretKey;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -160,24 +164,100 @@ public class LoginEncryptionUtils {
                             session.disconnect(GeyserLocale.getPlayerLocaleString("geyser.auth.login.form.disconnect", session.locale()));
                         }));
     }
+    public static void saveUserNameToDataBase(String bedrockUsername, String javaUsername){
+        String url = "jdbc:mysql://localhost:3306/geyser";
+        String username = "123";
+        String password = "123456";
+
+        //SQL插入或更新语句
+        String sql = "INSERT INTO player_data (bedrock_username, java_username) VALUES (?, ?) ON DUPLICATE KEY UPDATE java_username = VALUES(java_username)";
+
+        try (Connection conn = DriverManager.getConnection(url, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                 stmt.setString(1, bedrockUsername);
+                 stmt.setString(2, javaUsername);
+                 stmt.executeUpdate();
+             } catch (Exception e) {
+                 e.printStackTrace();
+             }
+    }
+    public static String getJavaUsernameFromDataBase(String bedrockUsername){
+        String url = "jdbc:mysql://localhost:3306/geyser";
+        String username = "123";
+        String password = "123456";
+        //SQL查询语句
+        String sql = "SELECT java_username FROM player_data WHERE bedrock_username = ?";
+        try (Connection conn = DriverManager.getConnection(url, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                 stmt.setString(1, bedrockUsername);
+                 try (var rs = stmt.executeQuery()) {
+                     if (rs.next()) {
+                         return rs.getString("java_username");
+                     }
+                 }
+             } catch (Exception e) {
+                 e.printStackTrace();
+             }
+        return null;
+    }
+    public static void buildAndShowLoginSuccessWindow(GeyserSession session) {
+        String locale = session.locale();
+        session.sendForm(
+                SimpleForm.builder()
+                       .translator(GeyserLocale::getPlayerLocaleString, locale)
+                       .title("geyser.auth.login.form.success.title")
+                       .content("geyser.auth.login.form.success.desc")
+        ); // 添加缺失的方法闭合
+    }
 
     /**
      * Build a window that explains the user's credentials will be saved to the system.
      */
-    public static void buildAndShowConsentWindow(GeyserSession session) {
-        String locale = session.locale();
+    public static void buildAndShowSelectLoginWindow(GeyserSession session) {
+        if (session.isLoggedIn()) {
+            // Can happen if a window is cancelled during dimension switch
+            return;
+        }
+        // Set DoDaylightCycle to false so the time doesn't accelerate while we're here
+        session.setDaylightCycle(false);
+        SimpleForm form = SimpleForm.builder()
+            .title("Title")
+            .content("Content")
+            .button("使用上次登录的账号")
+            .button("手动登录/注册")
+            .validResultHandler(response -> {
+                String buttonClicked = response.getClickedButton().getText();
+                if ("使用上次登录的账号".equals(buttonClicked)) {
+                    String javaUsername = getJavaUsernameFromDataBase(session.bedrockUsername());
+                    if (javaUsername != null) {
+                        session.authenticateWithMicrosoftCode();
+                    } else {
+                        buildAndShowLoginWindow(session);
+                    }
+                } else if ("手动登录/注册".equals(buttonClicked)) {
+                    buildAndShowLoginWindow(session);
+                }
+            })
+           .build();
 
+        session.sendForm(form);
+    }
+    public static void buildAndShowOfflineLoginWindow(GeyserSession session){
+        if (session.isLoggedIn()){
+            return;
+        }
+        session.setDaylightCycle(false);
         session.sendForm(
-                SimpleForm.builder()
-                        .translator(LoginEncryptionUtils::translate, locale)
-                        .title("%gui.signIn")
-                        .content("""
-                                geyser.auth.login.save_token.warning
-
-                                geyser.auth.login.save_token.proceed""")
-                        .button("%gui.ok")
-                        .button("%gui.decline")
-                        .resultHandler(authenticateOrKickHandler(session))
+            CustomForm.builder()
+                .translator(GeyserLocale::getPlayerLocaleString, session.locale())
+                .title("geyser.auth.login.form.details.title")
+                .input("geyser.auth.login.form.details.email","",session.bedrockUsername())
+                .closedOrInvalidResultHandler(() -> buildAndShowOfflineLoginWindow(session))
+                .validResultHandler((response) -> {
+                    String javaUsername = response.asInput(0);
+                    saveUserNameToDataBase(session.bedrockUsername(),javaUsername);
+                    session.authenticate(javaUsername);
+                }) // 删除多余的括号
         );
     }
 

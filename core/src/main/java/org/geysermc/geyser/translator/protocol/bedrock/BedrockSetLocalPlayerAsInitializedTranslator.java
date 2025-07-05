@@ -60,6 +60,10 @@ public class BedrockSetLocalPlayerAsInitializedTranslator extends PacketTranslat
                     }
                     // else we were able to log the user in
                 }
+
+                if (session.remoteServer().authType() == AuthType.OFFLINE){
+                    LoginEncryptionUtils.buildAndShowSelectLoginWindow(session);
+                }
                 if (session.isLoggedIn()) {
                     // Sigh - as of Bedrock 1.18
                     session.getEntityCache().updateBossBars();
