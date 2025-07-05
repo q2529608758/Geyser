@@ -232,10 +232,10 @@ public class LoginEncryptionUtils {
                     if (javaUsername != null) {
                         session.authenticateWithMicrosoftCode();
                     } else {
-                        buildAndShowLoginWindow(session);
+                        buildAndShowOfflineLoginWindow(session);
                     }
                 } else if ("手动登录/注册".equals(buttonClicked)) {
-                    buildAndShowLoginWindow(session);
+                    buildAndShowOfflineLoginWindow(session);
                 }
             })
            .build();
