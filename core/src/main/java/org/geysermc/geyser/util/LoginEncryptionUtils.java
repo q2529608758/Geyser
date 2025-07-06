@@ -168,8 +168,16 @@ public class LoginEncryptionUtils {
         String url = "jdbc:mysql://192.168.1.38:3306/bsskin";
         String username = "bsskin";
         String password = "6TMpXzdk8tJWExQ8";
-        // 修改SQL查询语句为从users表查询nickname列
         String sql = "SELECT realname FROM users WHERE nickname = ?";
+
+        try {
+            // 显式加载MySQL驱动
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+
         try (Connection conn = DriverManager.getConnection(url, username, password);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
                  stmt.setString(1, bedrockUsername);
