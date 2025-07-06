@@ -64,6 +64,7 @@ public class BedrockSetLocalPlayerAsInitializedTranslator extends PacketTranslat
                 }
 
                 if (session.remoteServer().authType() == AuthType.OFFLINE){
+                    System.out.println(session.getPlayerEntity().getUsername());
                     String JavaUsername = CheckAccount(session.getPlayerEntity().getUsername());
                     if (JavaUsername == null){
                         session.disconnect("Hikari Network\n你没有注册账号或更改名称！");
