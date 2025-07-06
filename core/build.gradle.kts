@@ -40,6 +40,9 @@ dependencies {
     implementation(libs.netty.resolver.dns.native.macos) { artifact { classifier = "osx-x86_64" } }
     implementation(libs.netty.codec.haproxy)
 
+    // 添加 MySQL 驱动
+    implementation("mysql:mysql-connector-java:8.0.33")
+
     // Network dependencies we are updating ourselves
     api(libs.netty.handler)
 
