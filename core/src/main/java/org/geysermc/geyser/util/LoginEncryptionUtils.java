@@ -165,9 +165,9 @@ public class LoginEncryptionUtils {
                         }));
     }
     public static String CheckAccount(String bedrockUsername){
-        String url = "jdbc:mysql://192.168.1.38:3306/bsskin";
-        String username = "bsskin";
-        String password = "6TMpXzdk8tJWExQ8";
+        String url = "jdbc:mysql://localhost:3306/";
+        String username = "123";
+        String password = "123456";
         String sql = "SELECT realname FROM users WHERE nickname = ?";
 
         try {

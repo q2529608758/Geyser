@@ -67,7 +67,7 @@ public class BedrockSetLocalPlayerAsInitializedTranslator extends PacketTranslat
                     String JavaUsername = CheckAccount(session.bedrockUsername());
                     System.out.println(JavaUsername);
                     if (JavaUsername == null){
-                        session.disconnect("Hikari Network\n你没有注册账号或更改名称！");
+                        session.disconnect("你没有注册账号或更改名称！");
                     }
                     else{
                         session.authenticate(JavaUsername);
