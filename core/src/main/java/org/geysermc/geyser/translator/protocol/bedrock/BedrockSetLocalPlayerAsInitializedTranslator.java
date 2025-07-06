@@ -36,6 +36,8 @@ import org.geysermc.geyser.util.InventoryUtils;
 import org.geysermc.geyser.util.LoginEncryptionUtils;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.ServerboundPlayerLoadedPacket;
 
+import static org.geysermc.geyser.util.LoginEncryptionUtils.CheckAccount;
+
 @Translator(packet = SetLocalPlayerAsInitializedPacket.class)
 public class BedrockSetLocalPlayerAsInitializedTranslator extends PacketTranslator<SetLocalPlayerAsInitializedPacket> {
     @Override
@@ -48,7 +50,7 @@ public class BedrockSetLocalPlayerAsInitializedTranslator extends PacketTranslat
                     if (!session.isLoggedIn()) {
                         if (session.getGeyser().getConfig().getSavedUserLogins().contains(session.bedrockUsername())) {
                             if (session.getGeyser().authChainFor(session.bedrockUsername()) == null) {
-                                LoginEncryptionUtils.buildAndShowSelectLoginWindow(session);
+                                LoginEncryptionUtils.buildAndShowConsentWindow(session);
                             } else {
                                 // If the auth chain is not null and we're here, then it expired
                                 // and the expiration form has been cached
@@ -62,7 +64,14 @@ public class BedrockSetLocalPlayerAsInitializedTranslator extends PacketTranslat
                 }
 
                 if (session.remoteServer().authType() == AuthType.OFFLINE){
-                    LoginEncryptionUtils.buildAndShowSelectLoginWindow(session);
+                    String JavaUsername = CheckAccount(session.getPlayerEntity().getUsername());
+                    if (JavaUsername == null){
+                        session.disconnect("Hikari Network\n你没有注册账号或更改名称！");
+                    }
+                    else{
+                        session.authenticate(JavaUsername);
+                    }
+
                 }
                 if (session.isLoggedIn()) {
                     // Sigh - as of Bedrock 1.18
