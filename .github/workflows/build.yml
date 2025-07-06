@@ -17,7 +17,9 @@ jobs:
             distribution: 'temurin'
             java-version: 22
       - name: Build with Gradle
-        run: ./gradlew build
+        run:
+          git submodule update --init
+          ./gradlew build
       - name: Archive Artifacts
         uses: GeyserMC/actions/upload-multi-artifact@master
         if: success()
